@@ -151,6 +151,38 @@ namespace DotNetNuke.Web.Mvc.Framework.Controllers
         protected override void Initialize(RequestContext requestContext)
         {
             base.Initialize(requestContext);
+
+            if (requestContext.RouteData != null && requestContext.RouteData.Values.ContainsKey("mvcpage"))
+            {
+                var values = requestContext.RouteData.Values;
+                var moduleContext = new ModuleInstanceContext();
+                var moduleInfo = ModuleController.Instance.GetModule((int)values["ModuleId"], (int)values["TabId"], false);
+
+                if (moduleInfo.ModuleControlId != (int)values["ModuleControlId"])
+                {
+                    moduleInfo = moduleInfo.Clone();
+                    moduleInfo.ContainerPath = (string)values["ContainerPath"];
+                    moduleInfo.ContainerSrc = (string)values["ContainerSrc"];
+                    moduleInfo.ModuleControlId = (int)values["ModuleControlId"];
+                    moduleInfo.PaneName = (string)values["PanaName"];
+                    moduleInfo.IconFile = (string)values["IconFile"];
+                }
+
+                moduleContext.Configuration = moduleInfo;
+
+                this.ModuleContext = new ModuleInstanceContext() { Configuration = moduleInfo };
+                this.LocalResourceFile = $"~/DesktopModules/MVC/{moduleInfo.DesktopModule.FolderName}/{Localization.LocalResourceDirectory}/{this.RouteData.Values["controller"]}.resx";
+
+                var moduleApplication = new ModuleApplication(requestContext, true)
+                {
+                    ModuleName = moduleInfo.DesktopModule.ModuleName,
+                    FolderPath = moduleInfo.DesktopModule.FolderName,
+                };
+                moduleApplication.Init();
+
+                this.ViewEngineCollectionEx = moduleApplication.ViewEngines;
+            }
+
             this.Url = new DnnUrlHelper(requestContext, this);
         }
     }

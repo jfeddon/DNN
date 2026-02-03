@@ -36,6 +36,11 @@ namespace DotNetNuke.Web.Mvc.Framework.Modules
             {
                 this.ResultOfLastInvoke = actionResult;
             }
+
+            if (controllerContext.RouteData.Values.ContainsKey("mvcpage"))
+            {
+                base.InvokeActionResult(controllerContext, actionResult);
+            }
         }
     }
 }

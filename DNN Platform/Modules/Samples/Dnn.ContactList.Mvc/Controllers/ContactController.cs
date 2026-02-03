@@ -5,9 +5,14 @@
 using System;
 using System.Web.Mvc;
 using Dnn.ContactList.Api;
+using DotNetNuke.Abstractions.ClientResources;
+using DotNetNuke.Abstractions.Pages;
 using DotNetNuke.Collections;
 using DotNetNuke.Common;
 using DotNetNuke.Entities.Modules.Actions;
+using DotNetNuke.Framework;
+using DotNetNuke.Framework.JavaScriptLibraries;
+using DotNetNuke.Web.Client.ResourceManager;
 using DotNetNuke.Web.Mvc.Framework.ActionFilters;
 using DotNetNuke.Web.Mvc.Framework.Controllers;
 
@@ -20,20 +25,25 @@ namespace Dnn.ContactList.Mvc.Controllers
     public class ContactController : DnnController
     {
         private readonly IContactRepository _repository;
-
-        /// <summary>
-        /// Default Constructor constructs a new ContactController
-        /// </summary>
-        public ContactController() : this(ContactRepository.Instance) { }
+        private readonly IClientResourceController clientResourceController;
+        private readonly IPageService pageService;
+        private readonly IJavaScriptLibraryHelper javaScriptLibraryHelper;
 
         /// <summary>
         /// Constructor constructs a new ContactController with a passed in repository
         /// </summary>
-        public ContactController(IContactRepository repository)
+        public ContactController(IClientResourceController clientResourceController,
+                                    IPageService pageService,
+                                    IJavaScriptLibraryHelper javaScriptLibraryHelper)
         {
-            Requires.NotNull(repository);
+            //Requires.NotNull(repository);
+            Requires.NotNull(clientResourceController);
+            Requires.NotNull(pageService);
 
-            _repository = repository;
+            this.clientResourceController = clientResourceController;
+            this.pageService = pageService;
+            this.javaScriptLibraryHelper = javaScriptLibraryHelper;
+            _repository = ContactRepository.Instance;
         }
 
         /// <summary>
@@ -106,11 +116,20 @@ namespace Dnn.ContactList.Mvc.Controllers
         /// </summary>
         /// <param name="searchTerm">Term to search.</param>
         /// <param name="pageIndex">Index of the current page.</param>
-        /// <param name="pageSize">Number of records per page.</param>
         /// <returns></returns>
         [ModuleAction(ControlKey = "Edit", TitleKey = "AddContact")]
         public ActionResult Index(string searchTerm = "", int pageIndex = 0)
         {
+            pageService.SetTitle("my page title");
+            clientResourceController
+                                .CreateScript("~/DesktopModules/MVC/Dnn/ContactList/script.js")
+                                .Register();
+            clientResourceController
+                            .CreateStylesheet("~/DesktopModules/MVC/Dnn/ContactList/stylesheet.css")
+                            .Register();
+            javaScriptLibraryHelper.RequestRegistration(CommonJs.jQuery);
+            ServicesFramework.Instance.RequestAjaxAntiForgerySupport();
+
             var contacts = _repository.GetContacts(searchTerm, PortalSettings.PortalId, pageIndex, ModuleContext.Configuration.ModuleSettings.GetValueOrDefault("PageSize", 6));
 
             return View(contacts);
