@@ -57,6 +57,12 @@
     width: fit-content;
   }
 
+  .filters {
+    display: flex;
+    justify-content: end;
+    gap: 1em;
+  }
+
   /* Table styling */
   .table {
     width: 100%;
@@ -73,12 +79,5 @@
   .table th {
     background-color: var(--dnn-color-neutral-dark, #999999);
     color: var(--dnn-color-neutral, #ededee);
-  }
-
-  /* Utility */
-  .clearfix::after {
-    content: '';
-    display: table;
-    clear: both;
   }
 }

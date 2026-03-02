@@ -1,6 +1,6 @@
 import { DnnServicesFramework } from '@dnncommunity/dnn-elements';
 import type { Event } from '../components/tabs/dnn-bi-logs/dnn-bi-logs.model';
-import { EventLogSeverityInfo, eventLogSeverity } from '../enums/EventLogSeverity';
+import { eventLogSeverity, EventLogSeverityInfo } from '../enums/EventLogSeverity';
 
 export class EventLogClient {
   private readonly sf: DnnServicesFramework;
@@ -11,17 +11,22 @@ export class EventLogClient {
     this.requestUrl = this.sf.getServiceRoot('BulkInstall') + 'EventLog/';
   }
 
-  public async browse(): Promise<BrowseResponse> {
-    const response = await fetch(`${this.requestUrl}Browse`, {
+  public async browse(pageIndex = 0, severity?: EventLogSeverityInfo, eventType?: string): Promise<BrowseResponse> {
+    const severityParam = severity ? `&severity=${severity.eventLogSeverityKey}` : '';
+    const eventTypeParam = eventType ? `&eventType=${eventType}` : '';
+    const response = await fetch(`${this.requestUrl}Browse?pageIndex=${pageIndex}${severityParam}${eventTypeParam}`, {
       headers: this.sf.getModuleHeaders(),
     });
     const responseBody = (await response.json()) as ResponseBody;
-    const browseResponse = {
-      Data: responseBody.Data.map(e => EventLogClient.toEvent(e)),
-      Pagination: responseBody.Pagination,
+    return {
+      data: responseBody.Data.map(e => EventLogClient.toEvent(e)),
+      pagination: EventLogClient.toPagination(responseBody.Pagination),
     };
+  }
 
-    return browseResponse;
+  public async getEventTypes(): Promise<string[]> {
+    const response = await fetch(`${this.requestUrl}EventTypes`, { headers: this.sf.getModuleHeaders() });
+    return (await response.json()) as string[];
   }
 
   private static toSeverity(severity: EventLogSeverityResponse): EventLogSeverityInfo {
@@ -47,26 +52,33 @@ export class EventLogClient {
       severity: EventLogClient.toSeverity(eventLog.Severity),
     };
   }
+
+  private static toPagination(pagination: PaginationResponse): Pagination {
+    return {
+      currentPage: pagination.CurrentPage,
+      pages: pagination.Pages,
+    };
+  }
 }
 
 export interface BrowseResponse {
-  Data: Event[];
-  Pagination: Pagination;
+  data: Event[];
+  pagination: Pagination;
 }
 
 export interface Pagination {
-  Records: number;
-  Pages: number;
-  CurrentPage: number;
-  Navigation: {
-    Previous?: string;
-    Next?: string;
-  };
+  pages: number;
+  currentPage: number;
 }
 
 interface ResponseBody {
   Data: EventLogResponse[];
-  Pagination: Pagination;
+  Pagination: PaginationResponse;
+}
+
+interface PaginationResponse {
+  Pages: number;
+  CurrentPage: number;
 }
 
 interface EventLogResponse {
