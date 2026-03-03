@@ -27,7 +27,7 @@
     "globals": "^16.4.0",
     "jest": "^30.2.0",
     "less": "4.4.2",
-    "less-loader": "12.3.0",
+    "less-loader": "12.3.1",
     "null-loader": "^4.0.1",
     "prop-types": "^15.8.1",
     "raw-loader": "4.0.2",
