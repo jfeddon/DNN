@@ -40,7 +40,7 @@
     "i18n-webpack-plugin": "1.0.0",
     "jest": "^30.2.0",
     "less": "4.4.2",
-    "less-loader": "12.3.0",
+    "less-loader": "12.3.1",
     "localization": "^1.0.2",
     "prop-types": "^15.8.1",
     "raw-loader": "4.0.2",
